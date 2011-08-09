@@ -14,30 +14,30 @@
  * @version 1.0
  * @license MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-var CacheProvider = (function(win){
+var CacheProvider = (function(win, undefined){
 	if (!win.support) {
 		win.support = {};
 	}
 	
 	try {
-		win.support.localStorage = ('localStorage' in window) && window['localStorage'] !== null;
-	} catch (ex) {
+		win.support.localStorage = ('localStorage' in win) && win.localStorage !== null;
+	} catch (err) {
 		win.support.localStorage = false;
 	}
 	
 	/**
 	 * Read or write to the object puts value into path string.
+	 * @param {Object} data Object to get or set data.
+	 * @param {String} key Name of key. Can be a dot separated object.
+	 * @param {Object} value Value to be set for key.
+	 * @return Returns value of key in read mode or object data modified in write mode
 	 * @private
 	 * @ignore
-	 * @param {Object} obj Object to get or set data.
-	 * @param {String} str Name of value (or path to go). Can be a dot separated object.
-	 * @param {Object} value Value to be set for path.
-	 * @return Returns value of path in read mode or object modified in write mode
 	 */
-	var path = function(obj, str, value) {
-		var str = str || '',
+	var path = function(data, key, value) {
+		var str = key || '',
 		    props = str.split('.'),
-		    obj = obj || {},
+		    obj = data || {},
 		    prop = props.shift();
 		
 		if (value) {
@@ -78,14 +78,10 @@ var CacheProvider = (function(win){
 	 * @param {String} name Namespace of cache.
 	 * @constructor
 	 */
-	var CacheProvider = function(name){
-		this.name = name || 'cache';
-		this.cache = {};
-		
-		if (win.support.localStorage) {
-			this.cache = JSON.parse(localStorage.getItem(this.name)) || {};
-		}
-	}
+	var CacheProvider = win.CacheProvider = function(name){
+		this.name = name || 'CacheProvider';
+		this.cache = win.support.localStorage && JSON.parse(localStorage.getItem(this.name)) || {};
+	};
 	
 	CacheProvider.constructor = CacheProvider;
 	
@@ -96,8 +92,11 @@ var CacheProvider = (function(win){
 	CacheProvider.prototype = {
 		/**
 		 * Returns the value at key in the cache.
+		 * @alias read
 		 * @param {String} key Name of key to returns. Can be a dot separated object.
 		 * @return Value of key. If key is undefined the entire cache will be returned.
+		 * @method
+		 * @public
 		 */
 		'get': function(key) {
 			return path(this.cache, key);
@@ -110,6 +109,7 @@ var CacheProvider = (function(win){
 		},
 		/**
 		 * Write to the cache puts value into key.
+		 * @alias write
 		 * @param {String} key Name of key to set. Can be a dot separated object.
 		 * @param {Object} value Value to be set.
 		 * @return Sync cache object and returns this.
@@ -128,13 +128,27 @@ var CacheProvider = (function(win){
 		},
 		/**
 		 * Clear the cache data at key.
+		 * @alias delete
 		 * @param {String} key Name of key to remove. Clear the cache data if undefined.
 		 * @return Sync cache object and returns this.
 		 * @type CacheProvider
+		 * @method
+		 * @public
 		 */
 		'remove': function(key) {
-			key ? path(this.cache, key, undefined) : this.cache = {};
-			
+            if (key) {
+                var map = key.split('.'),
+                    last = map.pop();
+                
+                var obj = path(this.cache, map.join('.'));
+                
+                if (obj && last in obj && obj[last]) {
+                    delete obj[last];
+                }
+            } else {
+                this.cache = {};
+            }
+            
 			return this.sync();
 		},
 		/**
@@ -155,14 +169,16 @@ var CacheProvider = (function(win){
 		 * @param {String} key Name of key to check. Clear the cache data if undefined.
 		 * @return Returns true on existence and false on non-existence.
 		 * @type Boolean
+		 * @method
+		 * @public
 		 */
 		'check': function(key) {
-			var array = key.split('.'),
-			    key = array.shift();
-		
-			var obj = path(this.cache, key);
+			var map = key.split('.'),
+			    last = map.pop();
+		    
+			var obj = path(this.cache, map.join('.'));
 			
-			return obj && key in obj && obj[key] !== undefined;
+			return obj && last in obj && obj[last] !== undefined;
 		},
 		/**
 		 * Backup data in localStorage if have support.
@@ -177,5 +193,5 @@ var CacheProvider = (function(win){
 		}
 	};
 	
-	return win.CacheProvider = CacheProvider;
+	return CacheProvider;
 })(window);
