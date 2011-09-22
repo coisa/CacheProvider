@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>CacheProvider Test</title>
+		
+		<script src="../src/cache.js" type="text/javascript"></script>
+	</head>
+	<body>
+		<script>
+			if (!window.console) {
+				window.console = {
+					log: function(debug) {
+						var pre = document.createElement('pre');
+						pre.innerHTML = JSON.stringify(debug);
+						document.body.appendChild(pre);
+					}
+				};
+			}
+		
+			var cache = new CacheProvider('Test');
+			
+			//cache.read('foo.bar'); // Will return undefined on first execution and a json { bar: { foobar: 'foo' } } if reload the page (and has localStorage support)
+			
+			cache.write('foo.bar', 'foobar');
+			//cache.read('foo'); // Will return a json { bar: 'foobar' }
+			
+			cache.write('foo.bar.foobar', 'foo');
+			//cache.read('foo'); // Will return a json { bar: { foobar: 'foo' } }
+			
+			cache.write('foo.bar.foobar', 'foo');
+			//cache.read('foo'); // Will return a json { bar: { foobar: 'foo' } }
+			
+			cache.bind(function(c){
+				console.log(c);
+			});
+			
+			cache.write('foo.test', 'new value');
+		</script>
+	</body>
+</html>

@@ -1,28 +1,28 @@
 /**
- * Cache Provider Library v1.0
- *
- * Inspired in CacheProvider of Dustin Diaz (http://www.dustindiaz.com/javascript-cache-provider/).
- *
- * Create a provider to storage informations in cache.
- * If support localStorage, use it to backup cache data.
- * Object structures can be created in the CacheProvider by using dot notation.
- *
- * Licensed under The MIT License
- * Redistributions of files must retain the above copyright notice.
- *
- * @author Felipe Sayão Lobato Abreu
- * @version 1.0
- * @license MIT License (http://www.opensource.org/licenses/mit-license.php)
- */
-var CacheProvider = (function(win, undefined){
-	if (!win.support) {
-		win.support = {};
+* Cache Provider Library v1.0
+*
+* Inspired in CacheProvider of Dustin Diaz (http://www.dustindiaz.com/javascript-cache-provider/).
+*
+* Create a provider to storage informations in cache.
+* If support localStorage, use it to backup cache data.
+* Object structures can be created in the CacheProvider by using dot notation.
+*
+* Licensed under The MIT License
+* Redistributions of files must retain the above copyright notice.
+*
+* @author Felipe Sayão Lobato Abreu
+* @version 1.0
+* @license MIT License (http://www.opensource.org/licenses/mit-license.php)
+*/
+var CacheProvider = (function(window, undefined){
+	if (!window.support) {
+		window.support = {};
 	}
 	
 	try {
-		win.support.localStorage = ('localStorage' in win) && win.localStorage !== null;
+		window.support.localStorage = ('localStorage' in win) && window.localStorage !== null;
 	} catch (err) {
-		win.support.localStorage = false;
+		window.support.localStorage = false;
 	}
 	
 	/**
@@ -36,16 +36,16 @@ var CacheProvider = (function(win, undefined){
 	 */
 	var path = function(data, key, value) {
 		var str = key || '',
-		    props = str.split('.'),
-		    obj = data || {},
-		    prop = props.shift();
+			props = str.split('.'),
+			obj = data || {},
+			prop = props.shift();
 		
 		if (value) {
 			/* WRITE */
 			if (!prop) {
 				obj = value;
 			} else {
-				if (!prop in obj) {
+				if (typeof obj[prop] !== 'object' || !prop in obj) {
 					obj[prop] = {};
 				}
 				
@@ -72,15 +72,22 @@ var CacheProvider = (function(win, undefined){
 			return value;
 		}
 	};
+	
+	/**
+	 * Event callback listeners
+	 * @private
+	 * @ignore
+	 */
+	var listeners = [];
 
 	/**
 	 * Create a named Cache Provider.
 	 * @param {String} name Namespace of cache.
 	 * @constructor
 	 */
-	var CacheProvider = win.CacheProvider = function(name){
+	var CacheProvider = window.CacheProvider = function(name){
 		this.name = name || 'CacheProvider';
-		this.cache = win.support.localStorage && JSON.parse(localStorage.getItem(this.name)) || {};
+		this.cache = window.support.localStorage && JSON.parse(localStorage.getItem(this.name)) || {};
 	};
 	
 	CacheProvider.constructor = CacheProvider;
@@ -136,19 +143,19 @@ var CacheProvider = (function(win, undefined){
 		 * @public
 		 */
 		'remove': function(key) {
-            if (key) {
-                var map = key.split('.'),
-                    last = map.pop();
-                
-                var obj = path(this.cache, map.join('.'));
-                
-                if (obj && last in obj && obj[last]) {
-                    delete obj[last];
-                }
-            } else {
-                this.cache = {};
-            }
-            
+			if (key) {
+				var map = key.split('.'),
+					last = map.pop();
+				
+				var obj = path(this.cache, map.join('.'));
+				
+				if (obj && last in obj && obj[last]) {
+					delete obj[last];
+				}
+			} else {
+				this.cache = {};
+			}
+			
 			return this.sync();
 		},
 		/**
@@ -174,8 +181,8 @@ var CacheProvider = (function(win, undefined){
 		 */
 		'check': function(key) {
 			var map = key.split('.'),
-			    last = map.pop();
-		    
+				last = map.pop();
+			
 			var obj = path(this.cache, map.join('.'));
 			
 			return obj && last in obj && obj[last] !== undefined;
@@ -184,11 +191,35 @@ var CacheProvider = (function(win, undefined){
 		 * Backup data in localStorage if have support.
 		 * @return This object instance.
 		 * @type CacheProvider
+		 * @method
 		 */
 		'sync': function() {
-			if (win.support.localStorage) {
+			if (window.support.localStorage) {
 				localStorage.setItem(this.name, JSON.stringify(this.cache));
 			}
+			
+			for(var fn = 0; fn < listeners.length; fn++) {
+				listeners[fn].call(this, this.cache);
+			}
+			
+			return this;
+		},
+		/**
+		 * Bind events to trigger on each sync
+		 * @param {Function} fn Callback to be triggered on sync method
+		 * @return This object instance
+		 * @type CacheProvider
+		 * @method
+		 */
+		'bind': function(fn){
+			if (typeof fn !== 'function') {
+				fn = function() {
+					return fn;
+				};
+			}
+			
+			listeners.push(fn);
+			
 			return this;
 		}
 	};
