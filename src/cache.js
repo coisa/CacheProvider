@@ -145,7 +145,7 @@ var CacheProvider = (function(window, undefined){
 		'remove': function(key) {
 			if (key) {
 				var map = key.split('.'),
-					last = map.pop();
+				    last = map.pop();
 				
 				var obj = path(this.cache, map.join('.'));
 				
@@ -162,7 +162,7 @@ var CacheProvider = (function(window, undefined){
 		 * @see CacheProvider.prototype.remove
 		 */
 		'delete': function(key){
-			this.remove(key);
+			return this.remove(key);
 		},
 		/**
 		 * Clear the cache data at all.
