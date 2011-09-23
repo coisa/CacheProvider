@@ -90,7 +90,7 @@ var CacheProvider = (function(window, undefined){
 		this.cache = window.support.localStorage && JSON.parse(localStorage.getItem(this.name)) || {};
 	};
 	
-	CacheProvider.constructor = CacheProvider;
+	CacheProvider.constructor = window.CacheProvider;
 	
 	/**
 	 * Methods of CacheProvider.
