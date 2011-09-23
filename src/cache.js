@@ -45,7 +45,7 @@ var CacheProvider = (function(window, undefined){
 			if (!prop) {
 				obj = value;
 			} else {
-				if (typeof obj[prop] !== 'object' || !prop in obj) {
+				if (obj[prop] === undefined || obj[prop].toString() !== '[object Object]') {
 					obj[prop] = {};
 				}
 				
@@ -181,7 +181,7 @@ var CacheProvider = (function(window, undefined){
 		 */
 		'check': function(key) {
 			var map = key.split('.'),
-				last = map.pop();
+			    last = map.pop();
 			
 			var obj = path(this.cache, map.join('.'));
 			
