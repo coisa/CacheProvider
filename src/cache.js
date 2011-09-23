@@ -45,7 +45,7 @@ var CacheProvider = (function(window, undefined){
 			if (!prop) {
 				obj = value;
 			} else {
-				if (obj[prop] === undefined || obj[prop].toString() !== '[object Object]') {
+				if (obj[prop] === undefined) {
 					obj[prop] = {};
 				}
 				
